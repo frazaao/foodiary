@@ -1,0 +1,32 @@
+org: deveesistemas
+app: foodiary-backend
+service: backend
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: sa-east-1
+  architecture: arm64
+
+package:
+  individually: true
+
+build:
+  esbuild:
+    minify: true
+    sourcemap: false
+
+functions:
+  signin:
+    handler: src/signin.handler
+    events:
+      - httpApi:
+          path: /signin
+          method: POST
+
+  signup:
+    handler: src/signup.handler
+    events:
+      - httpApi:
+          path: /signup
+          method: POST
