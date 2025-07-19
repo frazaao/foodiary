@@ -1,10 +1,8 @@
 import { signInController } from "../controllers/sign-in-controller";
 import { APIGatewayProxyEventV2 } from "aws-lambda";
-import { HttpEventMapper } from "../mappers/http-event-mapper";
+import { HttpRequest } from "../http/http-request";
 
 export const handler = async (event: APIGatewayProxyEventV2) => {
-  const response = await signInController.handle(
-    HttpEventMapper.eventToRequest(event)
-  );
-  return HttpEventMapper.responseToEvent(response);
+  const response = await signInController.handle(HttpRequest.fromEvent(event));
+  return response.toLambda();
 };
