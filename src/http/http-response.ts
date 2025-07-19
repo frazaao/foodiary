@@ -23,6 +23,10 @@ export class HttpResponse {
     return new HttpResponse(400, body);
   }
 
+  static unauthorized(body?: Record<string, any>): HttpResponse {
+    return new HttpResponse(401, body);
+  }
+
   static unprocessableEntity(body?: Record<string, any>): HttpResponse {
     return new HttpResponse(422, body);
   }

@@ -5,6 +5,9 @@ import { HttpResponse } from "../http/http-response";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { usersTable } from "../db/schema";
+import { hashEncryptor } from "../utils/hash-encryptor";
+import { goalCalculator } from "../services/goal-calculator";
+import { jwtEncryptor } from "../utils/jwt-encryptor";
 
 const schema = z.object({
   goal: z.enum(["lose", "maintain", "gain"]),
@@ -36,19 +39,30 @@ export class SignUpController extends Controller {
         error: "This email is already in use.",
       });
 
+    const hashedPassword = await hashEncryptor.hash(data.password);
+
+    const goals = goalCalculator.calculateGoals({
+      activityLevel: data.activityLevel,
+      birthDate: new Date(data.birthDate),
+      gender: data.gender,
+      goal: data.goal,
+      height: data.height,
+      weight: data.weight,
+    });
+
     const [user] = await db
       .insert(usersTable)
       .values({
         ...data,
-        callories: 0,
-        carbohydrates: 0,
-        fats: 0,
-        proteins: 0,
+        ...goals,
+        password: hashedPassword,
       })
       .returning({ id: usersTable.id });
 
+    const accessToken = jwtEncryptor.sign({ sub: user.id });
+
     return HttpResponse.created({
-      userId: user.id,
+      accessToken,
     });
   }
 }
