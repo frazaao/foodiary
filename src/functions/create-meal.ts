@@ -1,4 +1,4 @@
-import { APIGatewayProxyEventV2 } from "aws-lambda";
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { ProtectedHttpRequest } from "../http/protected-http-request";
 import { createMealController } from "../controllers/create-meal-controller";
 
@@ -12,7 +12,7 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
     if (error instanceof Error)
       return {
         statusCode: 400,
-        error: error.message,
+        body: JSON.stringify({ error: error.message }),
       };
   }
 };

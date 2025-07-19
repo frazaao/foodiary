@@ -7,12 +7,25 @@ provider:
   runtime: nodejs22.x
   region: sa-east-1
   architecture: arm64
-  timeout: 60
+  # timeout: 30
   environment:
     DATABASE_URL: ${env:DATABASE_URL}
     PASSWORD_HASH_SALT: ${env:PASSWORD_HASH_SALT}
     JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
     OPENAI_SECRET_KEY: ${env:OPENAI_SECRET_KEY}
+    BUCKET_NAME: !Ref UploadsBucket
+    MEALS_QUEUE_URL: !Ref MealsQueue
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource: !Sub "${UploadsBucket.Arn}/*"
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource: !GetAtt MealsQueue.Arn
 
 plugins:
   - serverless-offline
@@ -31,6 +44,18 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: foodiary-api-uploads
+    MealsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: "foodiary-api-meals-queue"
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          maxReceiveCount: 1
+          deadLetterTargetArn: !GetAtt MealsDLQ.Arn
+    MealsDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: "foodiary-api-meals-dlq"
 
 functions:
   signin:
@@ -74,3 +99,22 @@ functions:
       - httpApi:
           path: /meals/{mealId}
           method: GET
+
+  fileUploadedEvent:
+    handler: src/functions/file-uploaded-event.handler
+    events:
+      - s3:
+          bucket: !Ref UploadsBucket
+          event: s3:ObjectCreated:*
+          existing: true
+          forceDeploy: true
+
+  processMeal:
+    handler: src/functions/process-meal.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MealsQueue
+              - Arn
+          batchSize: 2
