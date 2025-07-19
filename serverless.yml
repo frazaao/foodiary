@@ -12,6 +12,7 @@ provider:
     DATABASE_URL: ${env:DATABASE_URL}
     PASSWORD_HASH_SALT: ${env:PASSWORD_HASH_SALT}
     JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
+    OPENAI_SECRET_KEY: ${env:OPENAI_SECRET_KEY}
 
 plugins:
   - serverless-offline
@@ -23,6 +24,13 @@ build:
   esbuild:
     minify: true
     sourcemap: false
+
+resources:
+  Resources:
+    UploadsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: foodiary-api-uploads
 
 functions:
   signin:
@@ -58,4 +66,11 @@ functions:
     events:
       - httpApi:
           path: /meals
+          method: GET
+
+  getMealById:
+    handler: src/functions/get-meal-by-id.handler
+    events:
+      - httpApi:
+          path: /meals/{mealId}
           method: GET

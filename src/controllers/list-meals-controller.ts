@@ -8,6 +8,9 @@ import { ProtectedHttpRequest } from "../http/protected-http-request";
 
 const schema = z.object({
   date: z.iso.date().transform((dateStr) => new Date(dateStr)),
+  status: z.optional(
+    z.enum(["queued", "uploading", "processing", "success", "failed"])
+  ),
 });
 
 export class ListMealsController extends Controller {
@@ -31,7 +34,7 @@ export class ListMealsController extends Controller {
         eq(mealsTable.userId, request.userId),
         gte(mealsTable.createdAt, data!.date),
         lte(mealsTable.createdAt, endDate),
-        eq(mealsTable.status, "success")
+        data.status ? eq(mealsTable.status, data.status) : undefined
       ),
     });
 
