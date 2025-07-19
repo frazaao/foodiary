@@ -1,4 +1,6 @@
+import { eq } from "drizzle-orm";
 import { Controller } from "../contracts/controller";
+import { db } from "../db";
 import { HttpRequest } from "../http/http-request";
 import { HttpResponse } from "../http/http-response";
 import { z } from "zod";

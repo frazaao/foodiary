@@ -22,4 +22,12 @@ export class HttpResponse {
   static badRequest(body?: Record<string, any>): HttpResponse {
     return new HttpResponse(400, body);
   }
+
+  static unprocessableEntity(body?: Record<string, any>): HttpResponse {
+    return new HttpResponse(422, body);
+  }
+
+  static conflict(body?: Record<string, any>): HttpResponse {
+    return new HttpResponse(409, body);
+  }
 }
